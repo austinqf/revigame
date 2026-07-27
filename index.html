@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReviGame — Learn & Earn</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Start Screen -->
+    <section id="start-screen" class="screen active">
+      <div class="card">
+        <h1 class="logo">ReviGame</h1>
+        <p class="subtitle">Learn, earn coins, and beat your high score!</p>
+
+        <div class="stats-row">
+          <div class="stat">
+            <span class="stat-label">High Score</span>
+            <span id="high-score-display" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Coins</span>
+            <span id="coins-display-start" class="stat-value coin">🪙 0</span>
+          </div>
+        </div>
+
+        <button id="start-btn" class="btn btn-primary">Start Quiz</button>
+        <button id="shop-btn-start" class="btn btn-secondary">Shop</button>
+      </div>
+    </section>
+
+    <!-- Subject Selection Screen -->
+    <section id="subject-screen" class="screen">
+      <div class="card">
+        <h2 class="screen-title">Choose a Subject</h2>
+        <p class="subtitle">Singapore MOE Primary Syllabus</p>
+
+        <div class="selection-grid">
+          <button class="select-btn" data-subject="Mathematics">
+            <span class="select-icon">🔢</span>
+            <span class="select-label">Mathematics</span>
+          </button>
+          <button class="select-btn" data-subject="English">
+            <span class="select-icon">📖</span>
+            <span class="select-label">English</span>
+          </button>
+          <button class="select-btn" data-subject="Science">
+            <span class="select-icon">🔬</span>
+            <span class="select-label">Science</span>
+            <span class="select-note">Primary 3–6</span>
+          </button>
+          <button class="select-btn" data-subject="Mother Tongue">
+            <span class="select-icon">🈶</span>
+            <span class="select-label">Mother Tongue</span>
+          </button>
+        </div>
+
+        <button id="subject-back-btn" class="btn btn-secondary">Back</button>
+      </div>
+    </section>
+
+    <!-- Level Selection Screen -->
+    <section id="level-screen" class="screen">
+      <div class="card">
+        <h2 class="screen-title">Choose Your Level</h2>
+        <p id="level-subject-label" class="subtitle">Mathematics</p>
+
+        <div id="level-grid" class="selection-grid level-grid"></div>
+        <p id="level-error" class="error-text" hidden></p>
+
+        <button id="level-back-btn" class="btn btn-secondary">Back</button>
+      </div>
+    </section>
+
+    <!-- Topic Selection Screen -->
+    <section id="topic-screen" class="screen">
+      <div class="card">
+        <h2 class="screen-title">Choose a Topic</h2>
+        <p id="topic-level-label" class="subtitle">Mathematics · Primary 3</p>
+
+        <div id="topic-grid" class="selection-grid"></div>
+        <p id="topic-error" class="error-text" hidden></p>
+
+        <button id="topic-back-btn" class="btn btn-secondary">Back</button>
+      </div>
+    </section>
+
+    <!-- Evolution Choice Screen -->
+    <section id="evolution-screen" class="screen">
+      <div class="card">
+        <h2 class="screen-title">Choose Your Evolution</h2>
+        <p id="evolution-form-label" class="subtitle">Current Form: Small Animal</p>
+        <p id="evolution-message" class="subtitle">Correct! Choose an adaptation to evolve:</p>
+
+        <div id="evolution-grid" class="selection-grid"></div>
+
+        <button id="evolution-continue-btn" class="btn btn-primary" hidden>Continue</button>
+      </div>
+    </section>
+
+    <!-- Question Screen -->
+    <section id="question-screen" class="screen">
+      <div id="battle-card" class="card question-card">
+        <!-- Boss Battle UI (hidden in classic mode) -->
+        <div id="boss-arena" class="boss-arena" hidden>
+          <div class="boss-header">
+            <div id="boss-avatar" class="boss-avatar">👹</div>
+            <div class="boss-info">
+              <h3 id="boss-name" class="boss-name">Quiz Boss</h3>
+              <span id="boss-phase-label" class="boss-phase-label">Phase 1</span>
+            </div>
+          </div>
+          <div class="health-row">
+            <span class="health-label">Boss HP</span>
+            <div class="health-bar boss-bar">
+              <div id="boss-hp-fill" class="health-fill boss-fill"></div>
+            </div>
+            <span id="boss-hp-text" class="health-text">150 / 150</span>
+          </div>
+          <div id="floating-text-container" class="floating-text-container"></div>
+        </div>
+
+        <!-- Evolution Path HUD Banner (Evolution Mode Only) -->
+        <div id="evolution-path-banner" class="evolution-path-banner" hidden>
+          <span class="evolution-path-title">🧬 Current Path:</span>
+          <span id="evolution-path-display" class="evolution-path-text">🐾 Small Animal</span>
+        </div>
+
+        <div class="hud">
+          <div class="hud-item">
+            <span class="hud-label">Score</span>
+            <span id="score-display" class="hud-value">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Question</span>
+            <span id="progress-display" class="hud-value">1 / 10</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Coins</span>
+            <span id="coins-display-game" class="hud-value coin">🪙 0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">Topic</span>
+            <span id="topic-display" class="hud-value topic-badge">P1 Math</span>
+          </div>
+          <div class="hud-item" id="evolution-form-hud" hidden>
+            <span class="hud-label">Form</span>
+            <span id="evolution-form-display" class="hud-value evolution-badge">🐾 Small Animal</span>
+          </div>
+        </div>
+
+        <div id="classic-progress" class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+
+        <!-- Player HP (boss mode only) -->
+        <div id="player-health-row" class="health-row player-health-row" hidden>
+          <span class="health-label">Your HP</span>
+          <div class="health-bar player-bar">
+            <div id="player-hp-fill" class="health-fill player-fill"></div>
+          </div>
+          <span id="player-hp-text" class="health-text">100 / 100</span>
+        </div>
+
+        <!-- Powerup bar -->
+        <div class="powerup-bar">
+          <button id="use-double-btn" class="powerup-btn" disabled title="Double points on next correct answer">
+            ⚡ Double <span id="double-count" class="powerup-count">0</span>
+          </button>
+          <button id="use-skip-btn" class="powerup-btn" disabled title="Skip this question">
+            ⏭ Skip <span id="skip-count" class="powerup-count">0</span>
+          </button>
+          <button id="toggle-calc-btn" class="powerup-btn calc-toggle-btn" title="Toggle Side Calculator">
+            🧮 Calculator
+          </button>
+        </div>
+
+        <div id="question-container" class="question-container">
+          <h2 id="question-text" class="question-text"></h2>
+          <div id="options-grid" class="options-grid"></div>
+          <p id="feedback-text" class="feedback-text"></p>
+
+          <!-- Adaptive AI Teacher Box -->
+          <div id="ai-teacher-box" class="ai-teacher-box" hidden>
+            <div class="ai-teacher-header">
+              <span class="ai-teacher-avatar">🤖</span>
+              <div class="ai-teacher-meta">
+                <span class="ai-teacher-title">AI Adaptive Teacher</span>
+                <span id="ai-teacher-tag" class="ai-teacher-tag">Concept Analysis</span>
+              </div>
+            </div>
+            <div id="ai-teacher-content" class="ai-teacher-content">
+              <p id="ai-explanation" class="ai-explanation"></p>
+              <div id="ai-steps" class="ai-steps"></div>
+              <div id="ai-tip" class="ai-tip"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side Calculator Widget -->
+      <div id="calculator-widget" class="calc-widget" hidden>
+        <div class="calc-header">
+          <span class="calc-title">🧮 Math Scratchpad</span>
+          <button id="calc-close-btn" class="calc-close-btn" title="Close Calculator">✕</button>
+        </div>
+        <div class="calc-screen">
+          <div id="calc-equation" class="calc-equation"></div>
+          <div id="calc-display" class="calc-display">0</div>
+        </div>
+        <div class="calc-grid">
+          <button class="calc-btn calc-action" data-action="clear">C</button>
+          <button class="calc-btn calc-action" data-action="delete">⌫</button>
+          <button class="calc-btn calc-op" data-op="/">÷</button>
+          <button class="calc-btn calc-op" data-op="*">×</button>
+
+          <button class="calc-btn calc-num" data-num="7">7</button>
+          <button class="calc-btn calc-num" data-num="8">8</button>
+          <button class="calc-btn calc-num" data-num="9">9</button>
+          <button class="calc-btn calc-op" data-op="-">−</button>
+
+          <button class="calc-btn calc-num" data-num="4">4</button>
+          <button class="calc-btn calc-num" data-num="5">5</button>
+          <button class="calc-btn calc-num" data-num="6">6</button>
+          <button class="calc-btn calc-op" data-op="+">+</button>
+
+          <button class="calc-btn calc-num" data-num="1">1</button>
+          <button class="calc-btn calc-num" data-num="2">2</button>
+          <button class="calc-btn calc-num" data-num="3">3</button>
+          <button class="calc-btn calc-equals" data-action="equals">=</button>
+
+          <button class="calc-btn calc-num calc-zero" data-num="0">0</button>
+          <button class="calc-btn calc-num" data-num=".">.</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- End Screen -->
+    <section id="end-screen" class="screen">
+      <div class="card">
+        <h2 id="end-title" class="end-title">Game Over!</h2>
+        <p id="end-topic-label" class="subtitle"></p>
+        <div class="results">
+          <div class="result-item" id="end-score-row">
+            <span class="result-label">Final Score</span>
+            <span id="final-score" class="result-value">0</span>
+          </div>
+          <div class="result-item" id="end-correct-row">
+            <span class="result-label">Correct Answers</span>
+            <span id="final-correct" class="result-value">0 / 10</span>
+          </div>
+          <div class="result-item" id="end-boss-row" hidden>
+            <span class="result-label">Boss Result</span>
+            <span id="final-boss-result" class="result-value">Victory!</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">Coins Earned</span>
+            <span id="final-coins" class="result-value coin">🪙 0</span>
+          </div>
+          <div class="result-item highlight" id="new-high-score" hidden>
+            <span class="result-label">🏆 New High Score!</span>
+          </div>
+        </div>
+
+        <!-- AI Adaptive Learning Report -->
+        <div id="ai-learning-report" class="ai-report-card" hidden>
+          <h3 class="ai-report-title">🤖 AI Adaptive Learning Report</h3>
+          <p id="ai-report-summary" class="ai-report-summary"></p>
+          <div id="ai-mastery-list" class="ai-mastery-list"></div>
+          <div id="ai-advice-box" class="ai-advice-box"></div>
+        </div>
+        <button id="restart-btn" class="btn btn-primary">Play Again</button>
+        <button id="change-topic-btn" class="btn btn-secondary">Change Topic</button>
+        <button id="change-subject-btn" class="btn btn-secondary">Change Subject</button>
+        <button id="shop-btn-end" class="btn btn-secondary">Shop</button>
+      </div>
+    </section>
+
+    <!-- Shop Screen -->
+    <section id="shop-screen" class="screen">
+      <div class="card">
+        <h2 class="shop-title">Powerup Shop</h2>
+        <p class="shop-balance">Your coins: <span id="shop-coins" class="coin">🪙 0</span></p>
+
+        <div class="shop-items">
+          <div class="shop-item">
+            <div class="shop-item-info">
+              <span class="shop-item-icon">⚡</span>
+              <div>
+                <h3>Double Points</h3>
+                <p>Next correct answer earns 2× score & coins.</p>
+              </div>
+            </div>
+            <button class="btn btn-buy" data-item="double" data-cost="50">Buy — 50 🪙</button>
+          </div>
+
+          <div class="shop-item">
+            <div class="shop-item-info">
+              <span class="shop-item-icon">⏭</span>
+              <div>
+                <h3>Skip Question</h3>
+                <p>Skip a question without losing points.</p>
+              </div>
+            </div>
+            <button class="btn btn-buy" data-item="skip" data-cost="30">Buy — 30 🪙</button>
+          </div>
+        </div>
+
+        <div class="inventory">
+          <h3>Your Inventory</h3>
+          <p>⚡ Double Points: <strong id="inv-double">0</strong></p>
+          <p>⏭ Skip Question: <strong id="inv-skip">0</strong></p>
+        </div>
+
+        <button id="shop-back-btn" class="btn btn-secondary">Back</button>
+      </div>
+    </section>
+
+    <!-- Mode Selection Modal (Science P6 Adaptations) -->
+    <div id="mode-select-modal" class="modal-overlay" hidden>
+      <div class="modal-card">
+        <div class="modal-badge">Science · Primary 6</div>
+        <h3 class="modal-title">Adaptations</h3>
+        <p class="modal-subtitle">Choose a mode to start playing:</p>
+        <div class="modal-options">
+          <button id="normal-quiz-mode-btn" class="modal-option-btn">
+            <span class="modal-option-icon">📝</span>
+            <div class="modal-option-info">
+              <span class="modal-option-title">Normal Quiz Mode</span>
+              <span class="modal-option-desc">Standard P6 Science revision questions</span>
+            </div>
+          </button>
+          <button id="evolution-mode-start-btn" class="modal-option-btn highlight-option">
+            <span class="modal-option-icon">🧬</span>
+            <div class="modal-option-info">
+              <span class="modal-option-title">Evolution Mode 🧬 <span class="new-tag">NEW</span></span>
+              <span class="modal-option-desc">Evolve your organism by answering adaptation questions!</span>
+            </div>
+          </button>
+        </div>
+        <button id="mode-select-cancel-btn" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
