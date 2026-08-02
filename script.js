@@ -484,7 +484,7 @@ const state = {
   selectedLevel: null,
   selectedTopic: 'all',
   gameMode: 'classic',       // 'classic', 'boss', or 'evolution'
-  // Evolution mode state
+  // Evolution mode state (only active when gameMode === 'evolution')
   evolutionForm: 'base',
   evolutionPath: ['🐾 Small Animal'],
   evolutionStage: 0,
@@ -518,6 +518,7 @@ const screens = {
   question: document.getElementById('question-screen'),
   end:      document.getElementById('end-screen'),
   shop:     document.getElementById('shop-screen'),
+  settings: document.getElementById('settings-screen'),
 };
 
 const els = {
@@ -603,6 +604,9 @@ const els = {
   normalQuizModeBtn: document.getElementById('normal-quiz-mode-btn'),
   evolutionModeStartBtn: document.getElementById('evolution-mode-start-btn'),
   modeSelectCancelBtn: document.getElementById('mode-select-cancel-btn'),
+  // Settings elements
+  settingsBtn: document.getElementById('settings-btn'),
+  settingsBackBtn: document.getElementById('settings-back-btn'),
 };
 
 // ----- Sound Effects (Web Audio — no external files) -----
@@ -697,6 +701,8 @@ function showScreen(name) {
 // ----- Subject & Level Selection (MOE flow) -----
 
 function goToSubjectSelect() {
+  // Reset game mode so a previous Evolution session doesn't carry over
+  state.gameMode = 'classic';
   showScreen('subject');
 }
 
@@ -803,14 +809,21 @@ function selectEvolution(choice) {
 }
 
 function updateEvolutionDisplay() {
+  // Always hide evolution UI if not in evolution mode
+  if (state.gameMode !== 'evolution') {
+    if (els.evolutionFormHud) els.evolutionFormHud.hidden = true;
+    if (els.evolutionPathBanner) els.evolutionPathBanner.hidden = true;
+    return;
+  }
+
   const currentForm = EVOLUTIONS[state.evolutionForm];
   if (currentForm) {
     els.evolutionFormDisplay.textContent = `${currentForm.emoji} ${currentForm.name}`;
-    els.evolutionFormHud.hidden = state.gameMode !== 'evolution';
+    els.evolutionFormHud.hidden = false;
   }
   if (els.evolutionPathBanner && els.evolutionPathDisplay) {
     els.evolutionPathDisplay.textContent = state.evolutionPath.join(' → ');
-    els.evolutionPathBanner.hidden = state.gameMode !== 'evolution';
+    els.evolutionPathBanner.hidden = false;
   }
 }
 
@@ -818,6 +831,10 @@ function goToTopicSelect() {
   state.selectedTopic = 'all';
   els.topicLevelLabel.textContent = `${state.selectedSubject} · Primary ${state.selectedLevel}`;
   if (els.topicError) els.topicError.hidden = true;
+  // Ensure modal is hidden when entering topic screen
+  if (els.modeSelectModal) {
+    els.modeSelectModal.hidden = true;
+  }
   renderTopicButtons();
   showScreen('topic');
 }
@@ -871,8 +888,13 @@ function selectTopic(topic) {
     }
   }
 
-  // Set game mode: boss mode if topic is 'all', otherwise classic
+  // For all other topics: force classic/boss mode, never evolution
   state.gameMode = topic === 'all' ? 'boss' : 'classic';
+
+  // Ensure modal is hidden for non-Adaptations topics
+  if (els.modeSelectModal) {
+    els.modeSelectModal.hidden = true;
+  }
 
   const pool = getFilteredQuestions();
   if (state.selectedSubject !== 'Mathematics' && pool.length === 0) {
@@ -1318,12 +1340,42 @@ function renderAiLearningReport() {
   els.aiLearningReport.hidden = false;
 }
 
-// Filter questions by the player's chosen subject and level
+// Filter questions by the player's chosen subject, level, and topic.
+// Questions with a `topic` tag (e.g. Adaptations) are ONLY included when
+// that specific topic is selected, or when "all" topics is chosen.
 function getFilteredQuestions() {
-  return QUESTIONS.filter(q =>
-    q.subject === state.selectedSubject &&
-    q.level === state.selectedLevel
-  );
+  // Determine whether the selected topic uses tagged questions
+  const topicHasTaggedQuestions = (topic) =>
+    topic !== 'all' &&
+    QUESTIONS.some(q =>
+      q.subject === state.selectedSubject &&
+      q.level   === state.selectedLevel   &&
+      q.topic   === topic
+    );
+
+  const topic = state.selectedTopic;
+  const isTaggedTopic = topic !== 'all' && topicHasTaggedQuestions(topic);
+
+  return QUESTIONS.filter(q => {
+    if (q.subject !== state.selectedSubject) return false;
+    if (q.level   !== state.selectedLevel)   return false;
+
+    if (topic === 'all') {
+      // "All Topics" mode: include everything regardless of topic tag
+      return true;
+    }
+
+    if (q.topic) {
+      // Tagged question — only include if it matches the selected topic
+      return q.topic === topic;
+    }
+
+    // Untagged question:
+    // If the selected topic relies on tagged questions (e.g. Adaptations),
+    // exclude untagged questions so they don't pollute the pool.
+    // Otherwise (generic topic with no tags) include all untagged questions.
+    return !isTaggedTopic;
+  });
 }
 
 // ----- Question Selection with Difficulty Scaling -----
@@ -1536,12 +1588,30 @@ function updateProgressBar() {
 }
 
 // ----- Render Current Question -----
-function renderQuestion(animate) {
-  hideAiTeacherAdvice();
-  if (els.questionContainer) els.questionContainer.classList.remove('slide-out-left');
-  const q = state.gameMode === 'boss' ? state.currentBossQuestion : state.gameQuestions[state.currentIndex];
-  if (!q) return;
+function renderQuestion(slideIn = true) {
+  // Force hide evolution UI at the very start
+  if (els.evolutionFormHud) els.evolutionFormHud.hidden = true;
+  if (els.evolutionPathBanner) els.evolutionPathBanner.hidden = true;
 
+  if (slideIn) {
+    const container = els.questionContainer;
+    container.classList.remove('slide-in-right', 'slide-out-left');
+    void container.offsetWidth;
+    container.classList.add('slide-in-right');
+  }
+
+  const q = state.gameMode === 'boss'
+    ? state.currentBossQuestion
+    : state.gameQuestions[state.currentIndex];
+
+  if (!q) {
+    endGame();
+    return;
+  }
+
+  state.answered = false;
+
+  // Progress display
   if (state.gameMode === 'classic') {
     const total = state.totalQuestionsThisGame;
     els.progressDisplay.textContent = `${state.currentIndex + 1} / ${total}`;
@@ -1558,12 +1628,7 @@ function renderQuestion(animate) {
   updatePowerupButtons();
 
   // Show evolution form display in evolution mode
-  if (state.gameMode === 'evolution') {
-    updateEvolutionDisplay();
-  } else {
-    els.evolutionFormHud.hidden = true;
-    if (els.evolutionPathBanner) els.evolutionPathBanner.hidden = true;
-  }
+  updateEvolutionDisplay();
 
   els.questionText.textContent = q.question;
   els.feedbackText.textContent = '';
@@ -1577,14 +1642,6 @@ function renderQuestion(animate) {
     btn.addEventListener('click', () => handleAnswer(i));
     els.optionsGrid.appendChild(btn);
   });
-
-  state.answered = false;
-
-  if (animate) {
-    els.questionContainer.classList.remove('slide-out-left');
-    els.questionContainer.classList.add('slide-in-right');
-    setTimeout(() => els.questionContainer.classList.remove('slide-in-right'), TRANSITION_DELAY_MS);
-  }
 }
 
 // ----- Answer Handling -----
@@ -1970,6 +2027,7 @@ if (els.evolutionModeStartBtn) {
     state.evolutionForm = 'base';
     state.evolutionPath = ['🐾 Small Animal'];
     state.evolutionStage = 0;
+    state.evolutionCorrectCount = 0;
     state.evolutionFinalForm = false;
     startGame();
   });
@@ -1980,6 +2038,68 @@ if (els.modeSelectCancelBtn) {
     if (els.modeSelectModal) els.modeSelectModal.hidden = true;
   });
 }
+
+// Settings Event Listeners
+if (els.settingsBtn) {
+  els.settingsBtn.addEventListener('click', () => showScreen('settings'));
+}
+
+if (els.settingsBackBtn) {
+  els.settingsBackBtn.addEventListener('click', () => showScreen('start'));
+}
+
+// Theme selection
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const theme = btn.dataset.theme;
+    applyTheme(theme);
+    updateThemeButtons(theme);
+    localStorage.setItem('revigame-theme', theme);
+  });
+});
+
+// Text size selection
+document.querySelectorAll('.size-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const size = btn.dataset.size;
+    applyTextSize(size);
+    updateSizeButtons(size);
+    localStorage.setItem('revigame-size', size);
+  });
+});
+
+// Load saved preferences on startup
+function loadSettings() {
+  const savedTheme = localStorage.getItem('revigame-theme') || 'dark';
+  const savedSize = localStorage.getItem('revigame-size') || 'medium';
+  applyTheme(savedTheme);
+  applyTextSize(savedSize);
+  updateThemeButtons(savedTheme);
+  updateSizeButtons(savedSize);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+}
+
+function applyTextSize(size) {
+  document.documentElement.setAttribute('data-size', size);
+}
+
+function updateThemeButtons(activeTheme) {
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === activeTheme);
+  });
+}
+
+function updateSizeButtons(activeSize) {
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.size === activeSize);
+  });
+}
+
+// Load settings on page load
+loadSettings();
 
 els.evolutionContinueBtn.addEventListener('click', () => {
   // Final form reached — end the game immediately
