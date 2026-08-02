@@ -11,7 +11,7 @@
     <!-- Start Screen -->
     <section id="start-screen" class="screen active">
       <div class="card">
-        <h1 class="logo">ReviGame</h1>
+        <h1 class="logo">⚡ ReviGame</h1>
         <p class="subtitle">Learn, earn coins, and beat your high score!</p>
 
         <div class="stats-row">
@@ -26,7 +26,38 @@
         </div>
 
         <button id="start-btn" class="btn btn-primary">Start Quiz</button>
+
         <button id="shop-btn-start" class="btn btn-secondary">Shop</button>
+
+        <button id="settings-btn" class="btn btn-secondary">Settings</button>
+      </div>
+    </section>
+
+    <!-- Settings Screen -->
+    <section id="settings-screen" class="screen">
+      <div class="card">
+        <h2 class="screen-title">Settings</h2>
+        <p class="subtitle">Customize your experience</p>
+
+        <div class="settings-section">
+          <h3 class="settings-label">Theme</h3>
+          <div class="theme-options">
+            <button class="theme-btn" data-theme="paper">Paper</button>
+            <button class="theme-btn" data-theme="modern">Modern</button>
+            <button class="theme-btn" data-theme="dark">Dark</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-label">Text Size</h3>
+          <div class="size-options">
+            <button class="size-btn" data-size="small">Small</button>
+            <button class="size-btn" data-size="medium">Medium</button>
+            <button class="size-btn" data-size="large">Large</button>
+          </div>
+        </div>
+
+        <button id="settings-back-btn" class="btn btn-primary">Back</button>
       </div>
     </section>
 
