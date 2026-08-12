@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <polygon points="50,34 52,40 58,40 53,44 55,50 50,46 45,50 47,44 42,40 48,40" fill="#ffc107"/>
+  <polygon points="78,34 80,40 86,40 81,44 83,50 78,46 73,50 75,44 70,40 76,40" fill="#ffc107"/>
+  <ellipse cx="50" cy="42" rx="6" ry="7" fill="#1e1e2e"/>
+  <ellipse cx="78" cy="42" rx="6" ry="7" fill="#1e1e2e"/>
+  <path d="M 50 58 Q 64 64 78 58" stroke="#1e1e2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

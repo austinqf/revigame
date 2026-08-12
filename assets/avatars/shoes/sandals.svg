@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="sandal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f4a261"/>
+      <stop offset="100%" stop-color="#e76f51"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="50" cy="117" rx="15" ry="7" fill="url(#sandal)"/>
+  <ellipse cx="78" cy="117" rx="15" ry="7" fill="url(#sandal)"/>
+  <path d="M 42 110 L 46 117 L 54 117 L 56 108 Z" fill="#e76f51"/>
+  <path d="M 70 108 L 72 117 L 80 117 L 84 110 Z" fill="#e76f51"/>
+</svg>
